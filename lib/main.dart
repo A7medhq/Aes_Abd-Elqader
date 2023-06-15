@@ -17,7 +17,7 @@ class EncryptData {
   // ignore: prefer_typing_uninitialized_variables
   static var decrypted;
 
-  static encryptAES(plainText) {
+  static String encryptAES(plainText) {
     final key = e.Key.fromUtf8('my 32 length key................');
     final iv = e.IV.fromLength(16);
     final encrypter = e.Encrypter(e.AES(key));
@@ -25,6 +25,8 @@ class EncryptData {
     if (kDebugMode) {
       print(encrypted!.base64);
     }
+
+    return encrypted!.base64;
   }
 
   static decryptAES(plainText) {
@@ -59,78 +61,88 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const Text('File : '),
-                  SizedBox(
-                      height: 50,
-                      width: 500,
-                      child: Card(child: Center(child: Text(fileName)))),
-                ],
-              ),
-              const SizedBox(height: 50),
-              const Row(
-                children: [
-                  Text('Folder : '),
-                  SizedBox(
-                      height: 50,
-                      width: 500,
-                      child: Card(child: Center(child: Text('FolderName')))),
-                ],
-              ),
-              const SizedBox(height: 50),
-              const Row(
-                children: [
-                  Text('Password : '),
-                  Expanded(child: TextField()),
-                ],
-              ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    TextButton(
-                        onPressed: () async {
-                          final result = await FilePicker.platform.pickFiles();
-                          bytes = result!.files.first.bytes!;
-                          text = String.fromCharCodes(bytes);
-                          fileName = result.files.first.name;
-                          setState(() {});
-                        },
-                        child: const Text('Add File')),
-                    TextButton(
-                        onPressed: () async {
-                          await FileSaver.instance.saveFile(
-                              bytes: byteList,
-                              name: fileName,
-                              mimeType: MimeType.text);
-                        },
-                        child: const Text('Select Folder')),
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            encrypt = EncryptData.encryptAES(text);
-                          });
-                          encryptText = utf8.encode(encrypt);
-                          byteList = Uint8List.fromList(encryptText);
-                          setState(() {});
-                        },
-                        child: const Text('Encryption')),
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            plainText = EncryptData.decrypted(encrypt);
-                          });
-                        },
-                        child: const Text('Decryption')),
+                    const Text('File : '),
+                    SizedBox(
+                        height: 50,
+                        width: 200,
+                        child: Card(child: Center(child: Text(fileName)))),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 50),
+                const Row(
+                  children: [
+                    Text('Folder : '),
+                    SizedBox(
+                        height: 50,
+                        width: 200,
+                        child: Card(child: Center(child: Text('FolderName')))),
+                  ],
+                ),
+                const SizedBox(height: 50),
+                const Row(
+                  children: [
+                    Text('Password : '),
+                    Expanded(child: TextField()),
+                  ],
+                ),
+                SizedBox(height: 50,),
+                SingleChildScrollView(
+                  scrollDirection:Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      TextButton(
+                          onPressed: () async {
+                            final result = await FilePicker.platform.pickFiles(withData: true);
+
+                            if (result != null) {
+                              fileName = result.files.first.name;
+                              bytes = result!.files.first.bytes!;
+                              text = String.fromCharCodes(bytes);
+                            }
+
+
+                            setState(() {});
+                          },
+                          child: const Text('Add File')),
+                      TextButton(
+                          onPressed: () async {
+                            await FileSaver.instance.saveFile(
+                                bytes: byteList,
+                                name: fileName,
+                                mimeType: MimeType.text);
+                          },
+                          child: const Text('Select Folder')),
+                      TextButton(
+                          onPressed: () {
+
+                              encrypt = EncryptData.encryptAES(text);
+                           encryptText = utf8.encode(encrypt);
+                           byteList = Uint8List.fromList(encryptText);
+
+                           print(byteList);
+                            setState(() {});
+                          },
+                          child: const Text('Encryption')),
+                      TextButton(
+                          onPressed: () {
+                            setState(() {
+                              plainText = EncryptData.decrypted(encrypt);
+                            });
+                          },
+                          child: const Text('Decryption')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
